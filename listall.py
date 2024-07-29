@@ -15,6 +15,10 @@ def list_all_files(directory):
     file_count = 0
     photo_count = 0
     movie_count = 0
+    mov_with_mp4_count = 0
+    heic_with_mp4_count = 0
+    dirlist_mov_to_mp4s = set()
+    dirlist_heic_to_mp4s = set()
 
     copy_of_count = 0
     collision_count = 0
@@ -33,17 +37,23 @@ def list_all_files(directory):
             logger.info(f"{root}  {len(dirs)} dirs  {len(files)} files")
 
         for file in files:
-            ext = Path(file).suffix
+            # Computations based on file extension
+            ext = Path(file).suffix.lower()
             if Path(file).suffix == "":
                 end_notes.append(f"No extension: {root} {file}")
+            
+            # Keep a set of all seen extensionw
             extensions.add(ext)
-            if ext.lower() in [".png", ".heic", ".jpg", ".gif", ".dng"]:
+            
+            # Does it look like a photo, a movie, or ???
+            if ext in [".png", ".heic", ".jpg", ".gif", ".dng"]:
                 photo_count += 1
-            elif ext.lower() in [".mov", ".mp4", ".3gp", ".avi"]:
+            elif ext in [".mov", ".mp4", ".3gp", ".avi"]:
                 movie_count += 1
             else:
                 end_notes.append(f"Extension not recognized: {root} {dir} {file}")
 
+            # Detect and eliminate files with names that start with "Copy of "
             if file.startswith("Copy of"):
                 cleaned_name = file.removeprefix("Copy of ")
                 new_name = f"{root}\\{cleaned_name}"
@@ -60,12 +70,32 @@ def list_all_files(directory):
                     #os.path.re
                 copy_of_count += 1
 
+            # If it is a .mov or .heic, does it have an identically-named .mp4 (yet)
+            if ext == '.mov':
+                replacement_file =  file.replace('.MOV','.mp4')
+                replacement_file =  replacement_file.replace('.mov','.mp4')
+                if os.path.isfile(f'{root}\\{replacement_file}'):
+                    dirlist_mov_to_mp4s.add(root)
+                    mov_with_mp4_count += 1
+            elif ext == '.heic':
+                replacement_file =  file.replace('.HEIC','.mp4')
+                replacement_file =  replacement_file.replace('.heic','.mp4')
+                if os.path.isfile(f'{root}\\{replacement_file}'):
+                    dirlist_heic_to_mp4s.add(root)
+                    heic_with_mp4_count += 1
+                    end_notes.append(f'HEIC with mp4: {root}\\{file}')
+
+
     logger.info(f"All extensions seen: {extensions}")
     logger.info(f"Total dirs: {dir_count}")
     logger.info(f"Total files: {file_count}")
     logger.info(f"Total photos: {photo_count}")
     logger.info(f"Total movies: {movie_count}")
     logger.info(f"Total photos+movies: {photo_count + movie_count}")
+    logger.info(f"Total mov_with_mp4_count {mov_with_mp4_count}")
+    logger.info(f"Total heic_with_mp4_count {heic_with_mp4_count}")
+    logger.info(f'Directories with mov --> mp4 files: {dirlist_mov_to_mp4s}')
+    logger.info(f'Directories with heic --> mp4 files: {dirlist_heic_to_mp4s}')
     logger.info(f'Total "Copy of..." files: {copy_of_count}')
     logger.info(f"Total collision count: {collision_count}")
     logger.info(f"{len(end_notes)} end_notes")
