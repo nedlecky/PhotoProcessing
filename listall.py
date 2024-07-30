@@ -15,9 +15,11 @@ def list_all_files(directory):
     file_count = 0
     photo_count = 0
     movie_count = 0
+    mov_without_mp4_count = 0
     mov_with_mp4_count = 0
     heic_with_mp4_count = 0
-    dirlist_mov_to_mp4s = set()
+    dirlist_mov_with_mp4s = set()
+    dirlist_mov_without_mp4s = set()
     dirlist_heic_to_mp4s = set()
 
     copy_of_count = 0
@@ -62,12 +64,12 @@ def list_all_files(directory):
                     collision_count += 1
                 else:
                     try:
-                        os.rename(f'{root}\\{file}', f'{root}\\{cleaned_name}')
-                        end_notes.append(f'Renamed {root}\\{file} --> {root}\\{cleaned_name}')
+                        # Uncomment when you are sure!
+                        # #os.rename(f'{root}\\{file}', f'{root}\\{cleaned_name}')
+                        end_notes.append(f'SUPPRESSED Rename {root}\\{file} --> {root}\\{cleaned_name}')
                     except:
                         error_messages.append(f'Could not rename in {root}: {file} to {cleaned_name}')
 
-                    #os.path.re
                 copy_of_count += 1
 
             # If it is a .mov or .heic, does it have an identically-named .mp4 (yet)
@@ -75,8 +77,13 @@ def list_all_files(directory):
                 replacement_file =  file.replace('.MOV','.mp4')
                 replacement_file =  replacement_file.replace('.mov','.mp4')
                 if os.path.isfile(f'{root}\\{replacement_file}'):
-                    dirlist_mov_to_mp4s.add(root)
+                    dirlist_mov_with_mp4s.add(root)
                     mov_with_mp4_count += 1
+                    end_notes.append(f'MOV with mp4: {root}\\{file}')
+                else:
+                    mov_without_mp4_count += 1
+                    dirlist_mov_without_mp4s.add(root)
+                    #end_notes.append(f'.MOV without mp4: {root}\\{file}')
             elif ext == '.heic':
                 replacement_file =  file.replace('.HEIC','.mp4')
                 replacement_file =  replacement_file.replace('.heic','.mp4')
@@ -93,8 +100,10 @@ def list_all_files(directory):
     logger.info(f"Total movies: {movie_count}")
     logger.info(f"Total photos+movies: {photo_count + movie_count}")
     logger.info(f"Total mov_with_mp4_count {mov_with_mp4_count}")
+    logger.info(f"Total mov_without_mp4_count {mov_without_mp4_count}")
     logger.info(f"Total heic_with_mp4_count {heic_with_mp4_count}")
-    logger.info(f'Directories with mov --> mp4 files: {dirlist_mov_to_mp4s}')
+    logger.info(f'Directories with mov --> mp4 files: {dirlist_mov_with_mp4s}')
+    logger.info(f'Directories without mov --> mp4 files: {dirlist_mov_without_mp4s}')
     logger.info(f'Directories with heic --> mp4 files: {dirlist_heic_to_mp4s}')
     logger.info(f'Total "Copy of..." files: {copy_of_count}')
     logger.info(f"Total collision count: {collision_count}")
