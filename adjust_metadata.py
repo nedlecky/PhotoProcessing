@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from PIL import Image
 import exifread
+import re
 
 
 def adjust_metadata(directory):
@@ -29,6 +30,24 @@ def adjust_metadata(directory):
         else:
             logger.info(f"{root}  {len(dirs)} dirs  {len(files)} files")
 
+        num_str = re.findall(r"[0-9]{4}", root)
+        min_year = 1900
+        max_year = 2100
+        if len(num_str) >= 2:
+            try:
+                min_year = int(num_str[0])
+                max_year = int(num_str[1])
+            except:
+                pass
+        elif len(num_str) == 1:
+            try:
+                min_year = int(num_str[0])
+                max_year = min_year
+            except:
+                pass
+
+        logger.info(f"{min_year=} {max_year=}")
+
         for file in files:
             # Computations based on file extension
             ext = Path(file).suffix.lower()
@@ -51,7 +70,7 @@ def adjust_metadata(directory):
                     except:
                         error_messages.append(f'Image could not open {full_name}')
                 '''
-                if True: #photo_count < 1000:
+                if False: #photo_count < 1000:
                     # Open image file for reading (binary mode)
                     full_name = f'{root}\\{file}'
                     try:
