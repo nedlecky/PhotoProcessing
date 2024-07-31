@@ -51,6 +51,10 @@ def adjust_metadata(directory):
 
         logger.info(f"{min_year=} {max_year=}")
 
+        if '[Originals]' in root:
+            end_notes.append(f"Originals: {root}")
+
+
         for file in files:
             # Computations based on file extension
             ext = Path(file).suffix.lower()
@@ -74,8 +78,8 @@ def adjust_metadata(directory):
                         error_messages.append(f'Image could not open {full_name}')
                 """
                 # WORKS!
-                # if min_year >= 1970 and max_year <= 2024:
-                if min_year >= 1970 and max_year <= 2024:
+                # if min_year >= 1900 and max_year <= 2024:
+                if min_year >= 1900 and max_year <= 2024:
                     if ext == ".png":
                         png_count += 1
                     else:
