@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 
-def list_all_files(directory):
+def file_structure_cleanup(directory):
     logger.info("starts")
 
     dir_count = 0
@@ -38,7 +38,35 @@ def list_all_files(directory):
         else:
             logger.info(f"{root}  {len(dirs)} dirs  {len(files)} files")
 
+        # Detect spaces in directory names
+        if ' ' in root:
+            error_messages.append(f"Directory name contains space: {root}")
+
         for file in files:
+            # Detect spaces in file names
+            if ' ' in file:
+                replaced_name = file.replace(' ', '_')
+                new_name = f"{root}\\{replaced_name}"
+                old_name = f"{root}\\{file}"
+                end_notes.append(f"Suggest renaming: {old_name} --> {new_name}")
+                #os.rename(old_name, new_name)
+
+            # Detect copy in file names
+            if 'copy' in file.lower():
+                replaced_name = file.replace('copy', '')
+                new_name = f"{root}\\{replaced_name}"
+                old_name = f"{root}\\{file}"
+                end_notes.append(f"Filename includes copy: {old_name} --> {new_name}")
+                #os.rename(old_name, new_name)
+
+            # Detect jpg.jpg in file names
+            if 'JPG.jpg' in file:
+                replaced_name = file.replace('.JPG.jpg', '.jpg')
+                new_name = f"{root}\\{replaced_name}"
+                old_name = f"{root}\\{file}"
+                end_notes.append(f"Suggest renaming JPG.jpg: {old_name} --> {new_name}")
+                #os.rename(old_name, new_name)
+
             # Computations based on file extension
             ext = Path(file).suffix.lower()
             if Path(file).suffix == "":
@@ -79,7 +107,7 @@ def list_all_files(directory):
                 if os.path.isfile(f'{root}\\{replacement_file}'):
                     dirlist_mov_with_mp4s.add(root)
                     mov_with_mp4_count += 1
-                    end_notes.append(f'MOV with mp4: {root}\\{file}')
+                    #end_notes.append(f'MOV with mp4: {root}\\{file}')
                 else:
                     mov_without_mp4_count += 1
                     dirlist_mov_without_mp4s.add(root)
@@ -115,20 +143,6 @@ def list_all_files(directory):
         logger.info(line)
 
     logger.info("ends")
-
-
-def subfunc(x):
-    logger.info("starts")
-    time.sleep(0.1)
-    logger.info("ends")
-
-
-def listall():
-    logger.info("starts")
-    subfunc(123)
-    time.sleep(0.1)
-    logger.info("ends")
-
 
 if __name__ == "__main__":
     # Set the default log level
@@ -179,8 +193,7 @@ if __name__ == "__main__":
 
     print("Test code running...")
     logger.info("Test code running...")
-    listall()
 
-    list_all_files("C:\\Users\\nedlecky\\ACDSee")
+    file_structure_cleanup("C:\\Users\\nedlecky\\ACDSee")
 
     logging.shutdown()
