@@ -1,4 +1,5 @@
 import logging
+
 logger = logging.getLogger(__name__)
 
 import time
@@ -15,6 +16,8 @@ def adjust_metadata(directory):
     dir_count = 0
     file_count = 0
     photo_count = 0
+    png_count = 0
+    heic_count = 0
     movie_count = 0
     extensions = set()
 
@@ -53,14 +56,14 @@ def adjust_metadata(directory):
             ext = Path(file).suffix.lower()
             if Path(file).suffix == "":
                 end_notes.append(f"No extension: {root} {file}")
-            
+
             # Keep a set of all seen extensionw
             extensions.add(ext)
-            
+
             # Does it look like a photo, a movie, or ???
             if ext in [".png", ".heic", ".jpg", ".gif", ".dng"]:
                 photo_count += 1
-                '''
+                """
                 if ext != '.heic' and photo_count < 2:
                     full_name = f'{root}\\{file}'
                     try:
@@ -69,32 +72,48 @@ def adjust_metadata(directory):
                         count += 1
                     except:
                         error_messages.append(f'Image could not open {full_name}')
-                '''
-                if False: #photo_count < 1000:
-                    # Open image file for reading (binary mode)
-                    full_name = f'{root}\\{file}'
-                    try:
-                        with open(full_name, 'rb') as f:
-                            # Return Exif tags
-                            tags = exifread.process_file(f)
+                """
+                # WORKS!
+                # if min_year >= 1970 and max_year <= 2024:
+                if min_year >= 1970 and max_year <= 2024:
+                    if ext == ".png":
+                        png_count += 1
+                    else:
+                        if ext == ".heic":
+                            heic_count += 1
+                            continue
 
-                            # Print the tags
-                            #for tag in tags.keys():
-                            #    print(f"{tag}: {tags[tag]}")
-                            print(tags['EXIF DateTimeOriginal'])
-                    except:
-                        error_messages.append(f'Exifread could not handle {full_name}')
+                        # Open image file for reading (binary mode)
+                        full_name = f"{root}\\{file}"
+                        tag_year = "0000000"
+                        tag_year_int = 0
+                        try:
+                            with open(full_name, "rb") as f:
+                                # Return Exif tags
+                                tags = exifread.process_file(f)
+                                tag_year = tags["EXIF DateTimeOriginal"]
+
+                                tag_year_int = int(str(tag_year)[0:4])
+                                if tag_year_int < min_year or tag_year_int > max_year:
+                                    error_messages.append(
+                                        f"{tag_year_int} out of year range {min_year}-{max_year}: {full_name}"
+                                    )
+                        except:
+                            error_messages.append(
+                                f"Exifread could not handle {full_name} {tag_year=} {tag_year_int=}"
+                            )
 
             elif ext in [".mov", ".mp4", ".3gp", ".avi"]:
                 movie_count += 1
             else:
                 end_notes.append(f"Extension not recognized: {root} {dir} {file}")
-   
 
     logger.info(f"All extensions seen: {extensions}")
     logger.info(f"Total dirs: {dir_count}")
     logger.info(f"Total files: {file_count}")
     logger.info(f"Total photos: {photo_count}")
+    logger.info(f"Total png: {png_count}")
+    logger.info(f"Total heic: {heic_count}")
     logger.info(f"Total movies: {movie_count}")
     logger.info(f"Total photos+movies: {photo_count + movie_count}")
     logger.info(f"{len(end_notes)} end_notes")
@@ -105,6 +124,7 @@ def adjust_metadata(directory):
         logger.info(line)
 
     logger.info("ends")
+
 
 if __name__ == "__main__":
     # Set the default log level
