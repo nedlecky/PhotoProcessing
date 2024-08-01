@@ -56,6 +56,8 @@ def adjust_metadata(directory):
             end_notes.append(f"Originals: {root}")
 
         for file in files:
+            full_name = f"{root}\\{file}"
+
             # Computations based on file extension
             ext = Path(file).suffix.lower()
             if Path(file).suffix == "":
@@ -88,22 +90,22 @@ def adjust_metadata(directory):
                             continue
 
                         # Open image file for reading (binary mode)
-                        full_name = f"{root}\\{file}"
-                        tag_year = "0000000"
-                        tag_year_int = 0
+                        tag_year = 0
                         try:
                             with open(full_name, "rb") as f:
                                 # Return Exif tags
                                 tags = exifread.process_file(f)
-                                tag_year = tags["EXIF DateTimeOriginal"]
+                                # Gets 2007:11:19 09:53:49
+                                tag = tags["EXIF DateTimeOriginal"]
 
-                                tag_year_int = int(str(tag_year)[0:4])
-                                if tag_year_int < min_year or tag_year_int > max_year:
+                                tag_year = int(str(tag)[0:4])
+                                tag_month = int(str(tag)[5:7])
+                                tag_day = int(str(tag)[8:10])
+                                if tag_year < min_year or tag_year > max_year:
                                     error_messages.append(
-                                        f"{tag_year_int} out of year range {min_year}-{max_year}: {full_name}"
+                                        f"{tag_year} out of year range {min_year}-{max_year}: {full_name}"
                                     )
 
-                                # These are all fine for years 2000-2024
                                 # Find all 19yymmdd or 20yymmdd in the text
                                 # (19\d{2}|20\d{2}) - Matches exactly four digits representing the year 19XX or 20XX
                                 # (0[1-9]|1[0-2]) - Matches a two-digit month, allowing values from 01 to 12
@@ -119,20 +121,48 @@ def adjust_metadata(directory):
                                         name_month = int(matches[0][1])
                                         name_day = int(matches[0][2])
                                         #end_notes.append(
-                                        #    f"{matches} {name_year} {name_month} {name_day} {file}"
+                                        #    f"{matches} {name_year} {name_month} {name_day} {root} {file}"
                                         #)
-                                        if name_year < min_year or name_year > max_year:
+                                        # Name matches tag??
+                                        #if name_year < min_year or name_year > max_year:
+                                        if name_year != tag_year or name_month != tag_month or name_day != tag_day:
                                             error_messages.append(
-                                                f"{name_year} filename date out of year range {min_year}-{max_year}: {full_name}"
+                                                f"{name_year} filename pattern doesn't match EXIF: {tag} {matches[0]} {full_name}"
                                             )
 
                         except:
                             error_messages.append(
-                                f"Exifread could not handle {full_name} {tag_year=} {tag_year_int=}"
+                                f"Exifread could not handle {full_name} {tag} {tag_year=}"
                             )
 
             elif ext in [".mov", ".mp4", ".3gp", ".avi"]:
                 movie_count += 1
+
+                # No EXIF for movies, but we can check any dates embedded in filenames against the folder name years!
+
+                # These are all fine for years 2000-2024
+                # Find all 19yymmdd or 20yymmdd in the text
+                # (19\d{2}|20\d{2}) - Matches exactly four digits representing the year 19XX or 20XX
+                # (0[1-9]|1[0-2]) - Matches a two-digit month, allowing values from 01 to 12
+                # (0[1-9]|[12][0-9]|3[01]) - Matches a two-digit day, allowing values from 01 to 31.
+                pattern = (
+                    r"(19\d{2}|20\d{2})(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])"
+                )
+                matches = re.findall(pattern, file)
+                if len(matches) == 1:
+                    if len(matches[0]) == 3:
+                        filename_date_checked += 1
+                        name_year = int(matches[0][0])
+                        name_month = int(matches[0][1])
+                        name_day = int(matches[0][2])
+                        #end_notes.append(
+                        #   f"{matches} {name_year} {name_month} {name_day} {root} {file}"
+                        #)
+                        if name_year < min_year or name_year > max_year:
+                            error_messages.append(
+                                f"{name_year} filename date out of year range {min_year}-{max_year}: {full_name}"
+                            )
+
             else:
                 end_notes.append(f"Extension not recognized: {root} {dir} {file}")
 
