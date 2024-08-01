@@ -63,7 +63,7 @@ def adjust_metadata(directory):
             if Path(file).suffix == "":
                 end_notes.append(f"No extension: {root} {file}")
 
-            # Keep a set of all seen extensionw
+            # Keep a set of all seen extensions
             extensions.add(ext)
 
             # Does it look like a photo, a movie, or ???
