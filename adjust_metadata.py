@@ -19,6 +19,7 @@ def adjust_metadata(directory):
     png_count = 0
     heic_count = 0
     movie_count = 0
+    filename_date_checked = 0
     extensions = set()
 
     end_notes = []
@@ -51,9 +52,8 @@ def adjust_metadata(directory):
 
         logger.info(f"{min_year=} {max_year=}")
 
-        if '[Originals]' in root:
+        if "[Originals]" in root:
             end_notes.append(f"Originals: {root}")
-
 
         for file in files:
             # Computations based on file extension
@@ -102,6 +102,30 @@ def adjust_metadata(directory):
                                     error_messages.append(
                                         f"{tag_year_int} out of year range {min_year}-{max_year}: {full_name}"
                                     )
+
+                                # These are all fine for years 2000-2024
+                                # Find all 19yymmdd or 20yymmdd in the text
+                                # (19\d{2}|20\d{2}) - Matches exactly four digits representing the year 19XX or 20XX
+                                # (0[1-9]|1[0-2]) - Matches a two-digit month, allowing values from 01 to 12
+                                # (0[1-9]|[12][0-9]|3[01]) - Matches a two-digit day, allowing values from 01 to 31.
+                                pattern = (
+                                    r"(19\d{2}|20\d{2})(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])"
+                                )
+                                matches = re.findall(pattern, file)
+                                if len(matches) == 1:
+                                    if len(matches[0]) == 3:
+                                        filename_date_checked += 1
+                                        name_year = int(matches[0][0])
+                                        name_month = int(matches[0][1])
+                                        name_day = int(matches[0][2])
+                                        #end_notes.append(
+                                        #    f"{matches} {name_year} {name_month} {name_day} {file}"
+                                        #)
+                                        if name_year < min_year or name_year > max_year:
+                                            error_messages.append(
+                                                f"{name_year} filename date out of year range {min_year}-{max_year}: {full_name}"
+                                            )
+
                         except:
                             error_messages.append(
                                 f"Exifread could not handle {full_name} {tag_year=} {tag_year_int=}"
@@ -120,12 +144,13 @@ def adjust_metadata(directory):
     logger.info(f"Total heic: {heic_count}")
     logger.info(f"Total movies: {movie_count}")
     logger.info(f"Total photos+movies: {photo_count + movie_count}")
+    logger.info(f"Total filename_date checked: {filename_date_checked}")
     logger.info(f"{len(end_notes)} end_notes")
-    for line in end_notes:
-        logger.info(line)
+    for i, line in enumerate(end_notes, start=1):
+        logger.info(f'{i}: {line}')
     logger.info(f"{len(error_messages)} error_messages")
-    for line in error_messages:
-        logger.info(line)
+    for i, line in enumerate(error_messages, start=1):
+        logger.info(f'{i}: {line}')
 
     logger.info("ends")
 

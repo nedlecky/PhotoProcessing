@@ -71,8 +71,8 @@ def file_structure_cleanup(directory):
             ext = Path(file).suffix.lower()
             if Path(file).suffix == "":
                 end_notes.append(f"No extension: {root} {file}")
-            
-            # Keep a set of all seen extensionw
+
+            # Keep a set of all seen extensions
             extensions.add(ext)
             
             # Does it look like a photo, a movie, or ???
@@ -136,11 +136,11 @@ def file_structure_cleanup(directory):
     logger.info(f'Total "Copy of..." files: {copy_of_count}')
     logger.info(f"Total collision count: {collision_count}")
     logger.info(f"{len(end_notes)} end_notes")
-    for line in end_notes:
-        logger.info(line)
+    for i, line in enumerate(end_notes, start=1):
+        logger.info(f'{i}: {line}')
     logger.info(f"{len(error_messages)} error_messages")
-    for line in error_messages:
-        logger.info(line)
+    for i, line in enumerate(error_messages, start=1):
+        logger.info(f'{i}: {line}')
 
     logger.info("ends")
 
