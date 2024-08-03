@@ -18,6 +18,7 @@ def file_structure_cleanup(directory):
     mov_without_mp4_count = 0
     mov_with_mp4_count = 0
     heic_with_mp4_count = 0
+    originals_folder_count = 0
     dirlist_mov_with_mp4s = set()
     dirlist_mov_without_mp4s = set()
     dirlist_heic_to_mp4s = set()
@@ -41,6 +42,11 @@ def file_structure_cleanup(directory):
         # Detect spaces in directory names
         if ' ' in root:
             error_messages.append(f"Directory name contains space: {root}")
+
+        if "[Originals]" in root:
+            originals_folder_count += 1
+            end_notes.append(f"[Originals] folder found: {root}")
+
 
         for file in files:
             # Detect spaces in file names
@@ -92,15 +98,15 @@ def file_structure_cleanup(directory):
                     collision_count += 1
                 else:
                     try:
-                        # Uncomment when you are sure!
-                        # #os.rename(f'{root}\\{file}', f'{root}\\{cleaned_name}')
                         end_notes.append(f'SUPPRESSED Rename {root}\\{file} --> {root}\\{cleaned_name}')
+                        # os.rename(f'{root}\\{file}', f'{root}\\{cleaned_name}')
                     except:
                         error_messages.append(f'Could not rename in {root}: {file} to {cleaned_name}')
 
                 copy_of_count += 1
 
             # If it is a .mov or .heic, does it have an identically-named .mp4 (yet)
+            '''
             if ext == '.mov':
                 replacement_file =  file.replace('.MOV','.mp4')
                 replacement_file =  replacement_file.replace('.mov','.mp4')
@@ -119,6 +125,7 @@ def file_structure_cleanup(directory):
                     dirlist_heic_to_mp4s.add(root)
                     heic_with_mp4_count += 1
                     end_notes.append(f'HEIC with mp4: {root}\\{file}')
+            '''
 
 
     logger.info(f"All extensions seen: {extensions}")
@@ -127,6 +134,7 @@ def file_structure_cleanup(directory):
     logger.info(f"Total photos: {photo_count}")
     logger.info(f"Total movies: {movie_count}")
     logger.info(f"Total photos+movies: {photo_count + movie_count}")
+    logger.info(f"Total [Originals] folders: {originals_folder_count}")
     logger.info(f"Total mov_with_mp4_count {mov_with_mp4_count}")
     logger.info(f"Total mov_without_mp4_count {mov_without_mp4_count}")
     logger.info(f"Total heic_with_mp4_count {heic_with_mp4_count}")
