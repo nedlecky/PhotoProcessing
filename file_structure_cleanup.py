@@ -26,6 +26,10 @@ def file_structure_cleanup(directory):
     copy_of_count = 0
     collision_count = 0
     extensions = set()
+    unique_filenames = set()
+    extensions_of_duplicates = set()
+    collision_index = 1
+
 
     end_notes = []
     error_messages = []
@@ -80,6 +84,20 @@ def file_structure_cleanup(directory):
 
             # Keep a set of all seen extensions
             extensions.add(ext)
+
+            # Checks for unique filenames
+            if file in unique_filenames:
+                end_notes.append(f'dup {ext} filename {root}\\{file}')
+                extensions_of_duplicates.add(ext)
+
+                old_name = f"{root}\\{file}"
+                replaced_name = file.replace(f'{ext}', f'_{collision_index}{ext}')
+                collision_index += 1
+                new_name = f"{root}\\{replaced_name}"
+                end_notes.append(f"Suggest rename: {old_name} --> {new_name}")
+                #os.rename(old_name, new_name)
+            else:
+                unique_filenames.add(file)
             
             # Does it look like a photo, a movie, or ???
             if ext in [".png", ".heic", ".jpg", ".gif", ".dng"]:
@@ -126,11 +144,11 @@ def file_structure_cleanup(directory):
                     heic_with_mp4_count += 1
                     end_notes.append(f'HEIC with mp4: {root}\\{file}')
             '''
-
-
     logger.info(f"All extensions seen: {extensions}")
     logger.info(f"Total dirs: {dir_count}")
     logger.info(f"Total files: {file_count}")
+    logger.info(f"Total unique filenames: {len(unique_filenames)}")
+    logger.info(f"Extensions of duplicate filenames: {extensions_of_duplicates}")
     logger.info(f"Total photos: {photo_count}")
     logger.info(f"Total movies: {movie_count}")
     logger.info(f"Total photos+movies: {photo_count + movie_count}")
