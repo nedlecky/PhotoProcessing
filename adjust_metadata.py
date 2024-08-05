@@ -84,7 +84,7 @@ def adjust_metadata(directory):
                 if min_year >= 1900 and max_year <= 2024:
                     if ext == ".png":
                         png_count += 1
-                        end_notes.append(f'PNG file: {root} {file}')
+                        #end_notes.append(f'PNG file: {root} {file}')
                     else:
                         if ext == ".heic":
                             heic_count += 1
