@@ -22,6 +22,7 @@ def file_structure_cleanup(directory):
     dirlist_mov_with_mp4s = set()
     dirlist_mov_without_mp4s = set()
     dirlist_heic_to_mp4s = set()
+    jpeg_renamed_count = 0  
 
     copy_of_count = 0
     collision_count = 0
@@ -29,7 +30,6 @@ def file_structure_cleanup(directory):
     unique_filenames = set()
     extensions_of_duplicates = set()
     collision_index = 1
-
 
     end_notes = []
     error_messages = []
@@ -44,61 +44,70 @@ def file_structure_cleanup(directory):
             logger.info(f"{root}  {len(dirs)} dirs  {len(files)} files")
 
         # Detect spaces in directory names
-        if ' ' in root:
+        if " " in root:
             error_messages.append(f"Directory name contains space: {root}")
 
         if "[Originals]" in root:
             originals_folder_count += 1
             end_notes.append(f"[Originals] folder found: {root}")
 
-
         for file in files:
             # Detect spaces in file names
-            if ' ' in file:
-                replaced_name = file.replace(' ', '_')
+            if " " in file:
+                replaced_name = file.replace(" ", "_")
                 new_name = f"{root}\\{replaced_name}"
                 old_name = f"{root}\\{file}"
                 end_notes.append(f"Suggest renaming: {old_name} --> {new_name}")
-                #os.rename(old_name, new_name)
+                # os.rename(old_name, new_name)
 
             # Detect copy in file names
-            if 'copy' in file.lower():
-                replaced_name = file.replace('copy', '')
+            if "copy" in file.lower():
+                replaced_name = file.replace("copy", "")
                 new_name = f"{root}\\{replaced_name}"
                 old_name = f"{root}\\{file}"
                 end_notes.append(f"Filename includes copy: {old_name} --> {new_name}")
-                #os.rename(old_name, new_name)
+                # os.rename(old_name, new_name)
 
             # Detect jpg.jpg in file names
-            if 'JPG.jpg' in file:
-                replaced_name = file.replace('.JPG.jpg', '.jpg')
+            if "JPG.jpg" in file:
+                replaced_name = file.replace(".JPG.jpg", ".jpg")
                 new_name = f"{root}\\{replaced_name}"
                 old_name = f"{root}\\{file}"
                 end_notes.append(f"Suggest renaming JPG.jpg: {old_name} --> {new_name}")
-                #os.rename(old_name, new_name)
+                # os.rename(old_name, new_name)
 
             # Computations based on file extension
             ext = Path(file).suffix.lower()
             if Path(file).suffix == "":
                 end_notes.append(f"No extension: {root} {file}")
 
+            # Rename .jpeg --> .jpg
+            if ext == ".jpeg":
+                replaced_name = file.replace(".jpeg", ".jpg")
+                new_name = f"{root}\\{replaced_name}"
+                old_name = f"{root}\\{file}"
+                end_notes.append(f"Suggest rename: {old_name} --> {new_name}")
+                os.rename(old_name, new_name)
+                jpeg_renamed_count += 1
+                ext = ".jpg"
+
             # Keep a set of all seen extensions
             extensions.add(ext)
 
             # Checks for unique filenames
             if file in unique_filenames:
-                end_notes.append(f'dup {ext} filename {root}\\{file}')
+                end_notes.append(f"dup {ext} filename {root}\\{file}")
                 extensions_of_duplicates.add(ext)
 
                 old_name = f"{root}\\{file}"
-                replaced_name = file.replace(f'{ext}', f'_{collision_index}{ext}')
-                collision_index += 1
+                replaced_name = file.replace(f"{ext}", f"_{collision_index}{ext}")
+                #collision_index += 1
                 new_name = f"{root}\\{replaced_name}"
                 end_notes.append(f"Suggest rename: {old_name} --> {new_name}")
                 #os.rename(old_name, new_name)
             else:
                 unique_filenames.add(file)
-            
+
             # Does it look like a photo, a movie, or ???
             if ext in [".png", ".heic", ".jpg", ".gif", ".dng"]:
                 photo_count += 1
@@ -112,19 +121,25 @@ def file_structure_cleanup(directory):
                 cleaned_name = file.removeprefix("Copy of ")
                 new_name = f"{root}\\{cleaned_name}"
                 if os.path.isfile(new_name):
-                    error_messages.append(f"Collision: {file} [{cleaned_name}] [{new_name}]")
+                    error_messages.append(
+                        f"Collision: {file} [{cleaned_name}] [{new_name}]"
+                    )
                     collision_count += 1
                 else:
                     try:
-                        end_notes.append(f'SUPPRESSED Rename {root}\\{file} --> {root}\\{cleaned_name}')
+                        end_notes.append(
+                            f"Suggest rename {root}\\{file} --> {root}\\{cleaned_name}"
+                        )
                         # os.rename(f'{root}\\{file}', f'{root}\\{cleaned_name}')
                     except:
-                        error_messages.append(f'Could not rename in {root}: {file} to {cleaned_name}')
+                        error_messages.append(
+                            f"Could not rename in {root}: {file} to {cleaned_name}"
+                        )
 
                 copy_of_count += 1
 
             # If it is a .mov or .heic, does it have an identically-named .mp4 (yet)
-            '''
+            """
             if ext == '.mov':
                 replacement_file =  file.replace('.MOV','.mp4')
                 replacement_file =  replacement_file.replace('.mov','.mp4')
@@ -143,7 +158,7 @@ def file_structure_cleanup(directory):
                     dirlist_heic_to_mp4s.add(root)
                     heic_with_mp4_count += 1
                     end_notes.append(f'HEIC with mp4: {root}\\{file}')
-            '''
+            """
     logger.info(f"All extensions seen: {extensions}")
     logger.info(f"Total dirs: {dir_count}")
     logger.info(f"Total files: {file_count}")
@@ -152,23 +167,25 @@ def file_structure_cleanup(directory):
     logger.info(f"Total photos: {photo_count}")
     logger.info(f"Total movies: {movie_count}")
     logger.info(f"Total photos+movies: {photo_count + movie_count}")
+    logger.info(f"Total .jpeg renamed to .jpg: {jpeg_renamed_count}")
     logger.info(f"Total [Originals] folders: {originals_folder_count}")
     logger.info(f"Total mov_with_mp4_count {mov_with_mp4_count}")
     logger.info(f"Total mov_without_mp4_count {mov_without_mp4_count}")
     logger.info(f"Total heic_with_mp4_count {heic_with_mp4_count}")
-    logger.info(f'Directories with mov --> mp4 files: {dirlist_mov_with_mp4s}')
-    logger.info(f'Directories without mov --> mp4 files: {dirlist_mov_without_mp4s}')
-    logger.info(f'Directories with heic --> mp4 files: {dirlist_heic_to_mp4s}')
+    logger.info(f"Directories with mov --> mp4 files: {dirlist_mov_with_mp4s}")
+    logger.info(f"Directories without mov --> mp4 files: {dirlist_mov_without_mp4s}")
+    logger.info(f"Directories with heic --> mp4 files: {dirlist_heic_to_mp4s}")
     logger.info(f'Total "Copy of..." files: {copy_of_count}')
     logger.info(f"Total collision count: {collision_count}")
     logger.info(f"{len(end_notes)} end_notes")
     for i, line in enumerate(end_notes, start=1):
-        logger.info(f'{i}: {line}')
+        logger.info(f"{i}: {line}")
     logger.info(f"{len(error_messages)} error_messages")
     for i, line in enumerate(error_messages, start=1):
-        logger.info(f'{i}: {line}')
+        logger.info(f"{i}: {line}")
 
     logger.info("ends")
+
 
 if __name__ == "__main__":
     # Set the default log level
@@ -220,6 +237,6 @@ if __name__ == "__main__":
     print("Test code running...")
     logger.info("Test code running...")
 
-    file_structure_cleanup("C:\\Users\\nedlecky\\ACDSee")
+    file_structure_cleanup("C:\\Users\\nedlecky\\Pictures\\ACDSee")
 
     logging.shutdown()

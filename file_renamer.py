@@ -6,6 +6,7 @@ import time
 import os
 from pathlib import Path
 
+
 def file_renamer(directory):
     logger.info("starts")
 
@@ -14,6 +15,7 @@ def file_renamer(directory):
     file_count = 0
     photo_count = 0
     movie_count = 0
+    jpeg_renamed_count = 0
 
     extensions = set()
     unique_filenames = set()
@@ -37,12 +39,22 @@ def file_renamer(directory):
             if Path(file).suffix == "":
                 end_notes.append(f"No extension: {root} {file}")
 
+            # Rename .jpeg --> .jpg
+            if file.endswith(".jpeg"):
+                replaced_name = file.replace(".jpeg", ".jpg")
+                new_name = f"{root}\\{replaced_name}"
+                old_name = f"{root}\\{file}"
+                end_notes.append(f"Suggest rename: {old_name} --> {new_name}")
+                os.rename(old_name, new_name)
+                jpeg_renamed_count += 1
+                ext = ".jpg"
+
             # Keep a set of all seen extensions
             extensions.add(ext)
 
             # Checks for unique filenames
             if file in unique_filenames:
-                #end_notes.append(f'dup {ext} filename {root}\\{file}')
+                end_notes.append(f'dup {ext} filename {root}\\{file}')
                 extensions_of_duplicates.add(ext)
             else:
                 unique_filenames.add(file)
@@ -53,19 +65,21 @@ def file_renamer(directory):
                     new_name = f"{root}\\{replaced_name}"
                     old_name = f"{root}\\{file}"
                     end_notes.append(f"Suggest rename: {old_name} --> {new_name}")
-                    #os.rename(old_name, new_name)
+                    # os.rename(old_name, new_name)
 
             # Rename 2024-06-27(nn) to IMG1_(nn), etc.
-            renamer(file, '2024-06-26', 'IMG0_')
-            renamer(file, '2024-06-27', 'IMG1_')
-            renamer(file, '2024-06-28', 'IMG2_')
-            renamer(file, '2024-07-01', 'IMG3_')
-            renamer(file, '2024-07-02', 'IMG4_')
-            renamer(file, '2024-07-07', 'IMG5_')
-            renamer(file, '2024-07-03', 'IMG6_')
-            renamer(file, '2024-07-06', 'IMG7_')
-            renamer(file, '2024-07-08', 'IMG8_')
-            
+            # Fill in thinngs that you want to bulk-rename with file-by-file control
+            # Historically:
+            # renamer(file, '2024-06-26', 'IMG0_')
+            # renamer(file, '2024-06-27', 'IMG1_')
+            # renamer(file, '2024-06-28', 'IMG2_')
+            # renamer(file, '2024-07-01', 'IMG3_')
+            # renamer(file, '2024-07-02', 'IMG4_')
+            # renamer(file, '2024-07-07', 'IMG5_')
+            # renamer(file, '2024-07-03', 'IMG6_')
+            # renamer(file, '2024-07-06', 'IMG7_')
+            # renamer(file, '2024-07-08', 'IMG8_')
+
             # Does it look like a photo, a movie, or ???
             if ext in [".png", ".heic", ".jpg", ".gif", ".dng"]:
                 photo_count += 1
@@ -80,16 +94,18 @@ def file_renamer(directory):
     logger.info(f"Total unique filenames: {len(unique_filenames)}")
     logger.info(f"Extensions of duplicate filenames: {extensions_of_duplicates}")
     logger.info(f"Total photos: {photo_count}")
+    logger.info(f"Total .jpeg renamed to .jpg: {jpeg_renamed_count}")
     logger.info(f"Total movies: {movie_count}")
     logger.info(f"Total photos+movies: {photo_count + movie_count}")
     logger.info(f"{len(end_notes)} end_notes")
     for i, line in enumerate(end_notes, start=1):
-        logger.info(f'{i}: {line}')
+        logger.info(f"{i}: {line}")
     logger.info(f"{len(error_messages)} error_messages")
     for i, line in enumerate(error_messages, start=1):
-        logger.info(f'{i}: {line}')
+        logger.info(f"{i}: {line}")
 
     logger.info("ends")
+
 
 if __name__ == "__main__":
     # Set the default log level
@@ -141,6 +157,6 @@ if __name__ == "__main__":
     print("Test code running...")
     logger.info("Test code running...")
 
-    file_renamer("C:\\Users\\nedlecky\\ACDSee")
+    file_renamer("C:\\Users\\nedlecky\\Pictures\\ACDSee")
 
     logging.shutdown()
