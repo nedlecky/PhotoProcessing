@@ -23,6 +23,7 @@ def file_structure_cleanup(directory):
     dirlist_mov_without_mp4s = set()
     dirlist_heic_to_mp4s = set()
     jpeg_renamed_count = 0  
+    n_tonfoto_ini_skipped = 0
 
     copy_of_count = 0
     collision_count = 0
@@ -52,6 +53,11 @@ def file_structure_cleanup(directory):
             end_notes.append(f"[Originals] folder found: {root}")
 
         for file in files:
+            if file==".tonfotos.ini":
+                #logger.info(f"Skipping .ini file: {root}\\{file}")
+                n_tonfoto_ini_skipped += 1
+                continue
+    
             # Detect spaces in file names
             if " " in file:
                 replaced_name = file.replace(" ", "_")
@@ -87,7 +93,7 @@ def file_structure_cleanup(directory):
                 new_name = f"{root}\\{replaced_name}"
                 old_name = f"{root}\\{file}"
                 end_notes.append(f"Suggest rename: {old_name} --> {new_name}")
-                os.rename(old_name, new_name)
+                #os.rename(old_name, new_name)
                 jpeg_renamed_count += 1
                 ext = ".jpg"
 
@@ -163,6 +169,7 @@ def file_structure_cleanup(directory):
     logger.info(f"Total dirs: {dir_count}")
     logger.info(f"Total files: {file_count}")
     logger.info(f"Total unique filenames: {len(unique_filenames)}")
+    logger.info(f"Total .tonfotos.ini files skipped: {n_tonfoto_ini_skipped}")
     logger.info(f"Extensions of duplicate filenames: {extensions_of_duplicates}")
     logger.info(f"Total photos: {photo_count}")
     logger.info(f"Total movies: {movie_count}")
@@ -237,6 +244,6 @@ if __name__ == "__main__":
     print("Test code running...")
     logger.info("Test code running...")
 
-    file_structure_cleanup("C:\\Users\\nedlecky\\Pictures\\ACDSee")
+    file_structure_cleanup("C:\\Users\\nedlecky\\Pictures\\Organized")
 
     logging.shutdown()

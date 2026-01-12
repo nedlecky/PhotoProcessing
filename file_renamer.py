@@ -34,7 +34,10 @@ def file_renamer(directory):
             logger.info(f"{root}  {len(dirs)} dirs  {len(files)} files")
 
         for file in files:
-            # Computations based on file extension
+            if file==".tonfotos.ini":
+                #logger.info(f"Skipping .ini file: {root}\\{file}")
+                continue
+
             ext = Path(file).suffix.lower()
             if Path(file).suffix == "":
                 end_notes.append(f"No extension: {root} {file}")
@@ -45,7 +48,7 @@ def file_renamer(directory):
                 new_name = f"{root}\\{replaced_name}"
                 old_name = f"{root}\\{file}"
                 end_notes.append(f"Suggest rename: {old_name} --> {new_name}")
-                os.rename(old_name, new_name)
+                #os.rename(old_name, new_name)
                 jpeg_renamed_count += 1
                 ext = ".jpg"
 
@@ -157,6 +160,6 @@ if __name__ == "__main__":
     print("Test code running...")
     logger.info("Test code running...")
 
-    file_renamer("C:\\Users\\nedlecky\\Pictures\\ACDSee")
+    file_renamer("C:\\Users\\nedlecky\\Pictures\\Organized")
 
     logging.shutdown()
