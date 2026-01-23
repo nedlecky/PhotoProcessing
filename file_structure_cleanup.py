@@ -6,9 +6,10 @@ import time
 import os
 from pathlib import Path
 
+actually_rename = False  # Set to True to enable actual renaming of files
 
 def file_structure_cleanup(directory):
-    logger.info("starts")
+    logger.info(f"file_structure_cleanup({directory})starts with {actually_rename=}")
 
     dir_count = 0
 
@@ -64,7 +65,8 @@ def file_structure_cleanup(directory):
                 new_name = f"{root}\\{replaced_name}"
                 old_name = f"{root}\\{file}"
                 end_notes.append(f"Suggest renaming: {old_name} --> {new_name}")
-                # os.rename(old_name, new_name)
+                if actually_rename:
+                    os.rename(old_name, new_name)
 
             # Detect copy in file names
             if "copy" in file.lower():
@@ -72,7 +74,8 @@ def file_structure_cleanup(directory):
                 new_name = f"{root}\\{replaced_name}"
                 old_name = f"{root}\\{file}"
                 end_notes.append(f"Filename includes copy: {old_name} --> {new_name}")
-                # os.rename(old_name, new_name)
+                if actually_rename:
+                    os.rename(old_name, new_name)
 
             # Detect jpg.jpg in file names
             if "JPG.jpg" in file:
@@ -80,7 +83,8 @@ def file_structure_cleanup(directory):
                 new_name = f"{root}\\{replaced_name}"
                 old_name = f"{root}\\{file}"
                 end_notes.append(f"Suggest renaming JPG.jpg: {old_name} --> {new_name}")
-                # os.rename(old_name, new_name)
+                if actually_rename:
+                    os.rename(old_name, new_name)
 
             # Computations based on file extension
             ext = Path(file).suffix.lower()
@@ -93,9 +97,10 @@ def file_structure_cleanup(directory):
                 new_name = f"{root}\\{replaced_name}"
                 old_name = f"{root}\\{file}"
                 end_notes.append(f"Suggest rename: {old_name} --> {new_name}")
-                #os.rename(old_name, new_name)
-                jpeg_renamed_count += 1
-                ext = ".jpg"
+                if actually_rename:
+                    os.rename(old_name, new_name)
+                    jpeg_renamed_count += 1
+                    ext = ".jpg"
 
             # Keep a set of all seen extensions
             extensions.add(ext)
@@ -110,7 +115,8 @@ def file_structure_cleanup(directory):
                 #collision_index += 1
                 new_name = f"{root}\\{replaced_name}"
                 end_notes.append(f"Suggest rename: {old_name} --> {new_name}")
-                #os.rename(old_name, new_name)
+                if actually_rename:
+                    os.rename(old_name, new_name)
             else:
                 unique_filenames.add(file)
 
@@ -136,7 +142,8 @@ def file_structure_cleanup(directory):
                         end_notes.append(
                             f"Suggest rename {root}\\{file} --> {root}\\{cleaned_name}"
                         )
-                        # os.rename(f'{root}\\{file}', f'{root}\\{cleaned_name}')
+                        if actually_rename:
+                            os.rename(f"{root}\\{file}", f"{root}\\{cleaned_name}")
                     except:
                         error_messages.append(
                             f"Could not rename in {root}: {file} to {cleaned_name}"

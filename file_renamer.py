@@ -6,9 +6,10 @@ import time
 import os
 from pathlib import Path
 
+actually_rename = False  # Set to True to enable actual renaming of files
 
 def file_renamer(directory):
-    logger.info("starts")
+    logger.info(f"file_renamer({directory})starts with {actually_rename=}")
 
     dir_count = 0
 
@@ -16,6 +17,7 @@ def file_renamer(directory):
     photo_count = 0
     movie_count = 0
     jpeg_renamed_count = 0
+    n_tonfoto_ini_skipped = 0
 
     extensions = set()
     unique_filenames = set()
@@ -36,6 +38,7 @@ def file_renamer(directory):
         for file in files:
             if file==".tonfotos.ini":
                 #logger.info(f"Skipping .ini file: {root}\\{file}")
+                n_tonfoto_ini_skipped += 1
                 continue
 
             ext = Path(file).suffix.lower()
@@ -48,7 +51,8 @@ def file_renamer(directory):
                 new_name = f"{root}\\{replaced_name}"
                 old_name = f"{root}\\{file}"
                 end_notes.append(f"Suggest rename: {old_name} --> {new_name}")
-                #os.rename(old_name, new_name)
+                if actually_rename:
+                    os.rename(old_name, new_name)
                 jpeg_renamed_count += 1
                 ext = ".jpg"
 
@@ -68,10 +72,11 @@ def file_renamer(directory):
                     new_name = f"{root}\\{replaced_name}"
                     old_name = f"{root}\\{file}"
                     end_notes.append(f"Suggest rename: {old_name} --> {new_name}")
-                    # os.rename(old_name, new_name)
+                    if actually_rename:
+                        os.rename(old_name, new_name)
 
             # Rename 2024-06-27(nn) to IMG1_(nn), etc.
-            # Fill in thinngs that you want to bulk-rename with file-by-file control
+            # Fill in things that you want to bulk-rename with file-by-file control
             # Historically:
             # renamer(file, '2024-06-26', 'IMG0_')
             # renamer(file, '2024-06-27', 'IMG1_')
@@ -95,6 +100,7 @@ def file_renamer(directory):
     logger.info(f"Total dirs: {dir_count}")
     logger.info(f"Total files: {file_count}")
     logger.info(f"Total unique filenames: {len(unique_filenames)}")
+    logger.info(f"Total .tonfotos.ini files skipped: {n_tonfoto_ini_skipped}")
     logger.info(f"Extensions of duplicate filenames: {extensions_of_duplicates}")
     logger.info(f"Total photos: {photo_count}")
     logger.info(f"Total .jpeg renamed to .jpg: {jpeg_renamed_count}")
